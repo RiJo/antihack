@@ -1,6 +1,6 @@
 -- Notes:
 --   * reply_message() is only executed when send_reply() returns true
---   * pipes (stderr, stdin and stdout) are cut when program is daemonized
+--   * all pipes (stderr, stdin and stdout) are cut when program is daemonized
 
 -- called for each incoming connection
 function incoming_connection(timestamp, ip, port)
@@ -20,6 +20,11 @@ function close_connection()
 end
 
 -- message which is sent back to client before closing connection
-function reply_message()
+function reply_message(timestamp, ip)
     return "ya simple hacker, i'll get revenge!\n"
+end
+
+-- executed everytime data is received
+function data_received(timestamp, ip, data)
+    -- ignored
 end

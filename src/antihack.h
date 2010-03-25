@@ -1,34 +1,39 @@
 #ifndef _ANTIHACK_H_
 #define _ANTIHACK_H_ 1
 
-#define PROGRAM_NAME "antihack"
-#define PROGRAM_VERSION "1.1.1"
-#define PROGRAM_DATE "2010-03-25"
+#define PROGRAM_NAME                "antihack"
+#define PROGRAM_VERSION             "1.2.0"
+#define PROGRAM_DATE                "2010-03-25"
 
-#define PID_FILE "/var/run/" PROGRAM_NAME ".pid"
+#define PID_FILE                    "/var/run/" PROGRAM_NAME ".pid"
 
 #define DEFAULT_PORT 22
-#define SOCKET_BUFFER_SIZE 1024
+#define BUFFER_SIZE 1024
 
-#define LUA_FUN_INCOMING "incoming_connection"
-#define LUA_FUN_SEND_REPLY "send_reply"
-#define LUA_FUN_CLOSE_CONNECTION "close_connection"
-#define LUA_FUN_REPLY_MESSAGE "reply_message"
+#define LUA_FUN_INCOMING            "incoming_connection"
+#define LUA_FUN_SEND_REPLY          "send_reply"
+#define LUA_FUN_CLOSE_CONNECTION    "close_connection"
+#define LUA_FUN_REPLY_MESSAGE       "reply_message"
+#define LUA_FUN_DATA_RECEIVED       "data_received"
 
 #ifdef _DEBUG_
-#define DEBUG printf("[debug] ");printf
+    #define DEBUG printf("[debug] ");printf
 #else
-#define DEBUG(arg1,...)
+    #define DEBUG(arg1,...)
 #endif
 
 void signal_handler(int);
+void start_server(int);
+void print_help();
+void print_usage();
+void print_version();
+void cleanup();
 
-void incoming(long, char *, int);
+// lua wrappers
+void incoming(const long, const char *, const int);
 int send_reply();
 int close_connection();
-const char *reply_message();
-
-void start_server(int);
-void cleanup();
+const char *reply_message(const long, const char *);
+void data_received(const long, const char *, const char *);
 
 #endif
