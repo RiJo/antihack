@@ -16,6 +16,7 @@
     Todo:
         * support for udp
         * reload lua script on custom interrupt
+        * fix chdir() in daemon.c
 */
 
 static lua_State *L;
@@ -56,6 +57,7 @@ int main(int argc, char **argv) {
 }
 
 void signal_handler(int signal) {
+    DEBUG("received interrupt %d\n", signal);
     switch (signal) {
         case SIGINT:
         case SIGTERM:
@@ -107,10 +109,10 @@ void start_server(int port) {
 
         incoming(time(NULL), inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
-        const char *reply = reply_message();
-        
-        if (send_reply())
+        if (send_reply()) {
+            const char *reply = reply_message();
             send(clientfd, reply, strlen(reply), 0);
+        }
 
         close(clientfd);
     }

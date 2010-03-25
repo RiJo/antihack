@@ -1,16 +1,20 @@
 --------------------------------------------------------------------------------
 
-   antihack
-   current version:     x.x.x
-   by:                  Rikard Johansson
+    antihack
+    current version:     1.0.0
+    by:                  Rikard Johansson
+
+    This application is a simple server written in c. Whenever an incoming
+    connection is established, corresponding functions is executed in the lua
+    script file making it easy to respond to unwanted connections.
 
 --------------------------------------------------------------------------------
- version 1.0.0, xxxx-xx-xx
+ version 1.0.0, 2010-03-25
 --------------------------------------------------------------------------------
     * TCP support
     * Arguments
-        -p (port)
-        -d (daemon)
+        -p PORT     specify listen port (default 22)
+        -d          daemonize
     * script.lua
         * incoming_connection(timestamp, ip, port)
         * send_reply()

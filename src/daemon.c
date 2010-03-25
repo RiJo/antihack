@@ -42,10 +42,10 @@ int daemonize(char *pid_file) {
         return 0;
     }
     /* Change the current working directory */
-    if ((chdir("/")) < 0) {
+    /*if ((chdir("/")) < 0) {
         fprintf(stderr, "Error: could not charge working directory\n");
         return 0;
-    }
+    }*/
     /* Save pid file */
     if (pid_file != NULL) {
         save_pid_to_file(pid_file, sid);
