@@ -17,6 +17,7 @@
         * support for udp
         * reload lua script on custom interrupt
         * fix chdir() in daemon.c
+        * pass client lock over to a lua function
 */
 
 static lua_State *L;
@@ -101,11 +102,10 @@ void start_server(int port) {
     }
 
     while (1) {
-        int clientfd;
         struct sockaddr_in client_addr;
-        socklen_t addrlen=sizeof(client_addr);
+        socklen_t addrlen = sizeof(client_addr);
 
-        clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
+        int clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
 
         incoming(time(NULL), inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
@@ -114,7 +114,15 @@ void start_server(int port) {
             send(clientfd, reply, strlen(reply), 0);
         }
 
-        close(clientfd);
+        if (close_connection()) {
+            close(clientfd);
+        }
+        else {
+            if (fork() == 0) {
+                while(1); /* lock client */
+            }
+            DEBUG("connection forked and left to its destiny\n");
+        }
     }
 }
 
@@ -134,6 +142,15 @@ int send_reply() {
     int send_reply = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return send_reply;
+}
+
+int close_connection() {
+    DEBUG("calling lua function %s()\n", LUA_FUN_CLOSE_CONNECTION);
+    lua_getglobal(L, LUA_FUN_CLOSE_CONNECTION);
+    lua_call(L, 0, 1);
+    int close_connection = lua_toboolean(L, -1);
+    lua_pop(L, 1);
+    return close_connection;
 }
 
 const char *reply_message() {

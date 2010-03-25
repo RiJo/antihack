@@ -14,6 +14,11 @@ function send_reply()
     return true
 end
 
+-- if the connection should be closed or just forked and left in eternity
+function close_connection()
+    return false
+end
+
 -- message which is sent back to client before closing connection
 function reply_message()
     return "ya simple hacker, I'll get revenge!\n"
