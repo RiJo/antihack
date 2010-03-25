@@ -1,15 +1,25 @@
+--------------------------------------------------------------------------------
+-- antihack-1.3.0
+--------------------------------------------------------------------------------
 -- Notes:
 --   * reply_message() is only executed when send_reply() returns true
+--   * data_received() is only executed if close_connection() returns false
 --   * all pipes (stderr, stdin and stdout) are cut when program is daemonized
+--------------------------------------------------------------------------------
 
--- called for each incoming connection
-function incoming_connection(timestamp, ip, port)
+-- called when a connection is established
+function connection_established(timestamp, ip)
     local file = io.open("rejected.log", "a")
-    file:write(timestamp .. ";" .. ip .. ";" .. port .. "\n")
+    file:write(timestamp .. ";" .. ip .. "\n")
     file:close() 
 end
 
--- if reply message should be sent back to client before closing connection
+-- called when a connection is closed
+function connection_closed(timestamp, ip)
+    -- ignored
+end
+
+-- if reply message should be sent back to client after connecting
 function send_reply()
     return true
 end
@@ -19,7 +29,7 @@ function close_connection()
     return false
 end
 
--- message which is sent back to client before closing connection
+-- message which is sent back to client immediately after connecting
 function reply_message(timestamp, ip)
     return "ya simple hacker, i'll get revenge!\n"
 end

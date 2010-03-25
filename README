@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.2.0
+    current version:     1.3.0
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
@@ -46,4 +46,15 @@
         * reply_message(timestamp, ip)
         + data_received(timestamp, ip, data)
     * Cleaned up code
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.3.0, 2010-03-25
+--------------------------------------------------------------------------------
+    * Removed long commandline arguments
+    * script.lua
+        * connection_established(timestamp, ip)
+        + connection_closed(timestamp, ip)
+    * Bugfix: not daemonize before socket is created successfully
 --------------------------------------------------------------------------------
