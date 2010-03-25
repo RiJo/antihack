@@ -18,6 +18,7 @@
         * reload lua script on custom interrupt
         * fix chdir() in daemon.c
         * pass client lock over to a lua function
+        * kill child when connection is closed by client
 */
 
 static lua_State *L;
@@ -118,8 +119,12 @@ void start_server(int port) {
             close(clientfd);
         }
         else {
+            char temp;
             if (fork() == 0) {
-                while(1); /* lock client */
+                while(recv(clientfd, &temp, 1, 0) > 0); /* lock client */
+                DEBUG("client closed connection\n");
+                close(clientfd);
+                exit(EXIT_SUCCESS);
             }
             DEBUG("connection forked and left to its destiny\n");
         }

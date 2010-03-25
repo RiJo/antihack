@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.1.0
+    current version:     1.1.1
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
@@ -28,4 +28,11 @@
     * Ability to fork and lock incoming connection
     * script.lua
         * close_connection()
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.1.1, 2010-03-25
+--------------------------------------------------------------------------------
+    * Bugfix: forked process didn't exit when client closed connection
 --------------------------------------------------------------------------------

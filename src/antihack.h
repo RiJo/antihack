@@ -2,7 +2,7 @@
 #define _ANTIHACK_H_ 1
 
 #define PROGRAM_NAME "antihack"
-#define PROGRAM_VERSION "1.1.0"
+#define PROGRAM_VERSION "1.1.1"
 #define PROGRAM_DATE "2010-03-25"
 
 #define PID_FILE "/var/run/" PROGRAM_NAME ".pid"

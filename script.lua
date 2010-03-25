@@ -21,5 +21,5 @@ end
 
 -- message which is sent back to client before closing connection
 function reply_message()
-    return "ya simple hacker, I'll get revenge!\n"
+    return "ya simple hacker, i'll get revenge!\n"
 end
