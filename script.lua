@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- antihack-1.4.0
+-- antihack-1.5.0
 --------------------------------------------------------------------------------
 -- Notes:
 --   * reply_message() is only executed when send_reply() returns true
@@ -14,6 +14,7 @@ end
 
 -- called when a connection is closed
 function connection_closed(timestamp, ip, port, duration)
+    ---- log connection ----
     local file = io.open("connections.log", "a")
     file:write(timestamp .. "\t" .. ip .. ":" .. port .. "\t" .. duration .. "s\n")
     file:close() 
@@ -26,7 +27,7 @@ end
 
 -- if the connection should be closed or just forked and left in eternity
 function close_connection(timestamp, ip, port)
-    return not (port == 22)
+    return not (port < 10000)
 end
 
 -- message which is sent back to client immediately after connecting
@@ -34,9 +35,12 @@ function reply_message(timestamp, ip, port)
     return "ya simple hacker, i'll get revenge!\n"
 end
 
--- executed everytime data is received
+-- executed everytime data is received and sends back the return-value to client
 function data_received(timestamp, ip, port, data)
+    ---- log data ----
     local file = io.open(ip .. ":" .. port .. ".log", "a")
     file:write(data)
-    file:close() 
+    file:close()
+    ---- send reply ----
+    return nil
 end

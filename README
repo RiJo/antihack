@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.4.0
+    current version:     1.5.0
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
@@ -16,9 +16,9 @@
         -p PORT     specify listen port (default 22)
         -d          daemonize
     * script.lua
-        + incoming_connection(timestamp, ip, port)
-        + send_reply()
-        + reply_message()
+        + void incoming_connection(timestamp, ip, port)
+        + bool send_reply()
+        + string reply_message()
 --------------------------------------------------------------------------------
 
 
@@ -27,7 +27,7 @@
 --------------------------------------------------------------------------------
     * Ability to fork and lock incoming connection
     * script.lua
-        + close_connection()
+        + bool close_connection()
 --------------------------------------------------------------------------------
 
 
@@ -43,8 +43,8 @@
 --------------------------------------------------------------------------------
     * Updated commandline argument handling
     * script.lua
-        * reply_message(timestamp, ip)
-        + data_received(timestamp, ip, data)
+        * string reply_message(timestamp, ip)
+        + void data_received(timestamp, ip, data)
     * Cleaned up code
 --------------------------------------------------------------------------------
 
@@ -54,8 +54,8 @@
 --------------------------------------------------------------------------------
     * Removed long commandline arguments
     * script.lua
-        * connection_established(timestamp, ip)
-        + connection_closed(timestamp, ip)
+        * void connection_established(timestamp, ip)
+        + void connection_closed(timestamp, ip)
     * Bugfix: not daemonize before socket is created successfully
 --------------------------------------------------------------------------------
 
@@ -65,6 +65,14 @@
 --------------------------------------------------------------------------------
     * script.lua
         Added timestamp, ip and port as parameters to all functions
-        * connection_closed(timestamp, ip, port, duration)
+        * void connection_closed(timestamp, ip, port, duration)
     * Bugfix: buffer reset with zeros before each receive
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.5.0, 2010-03-26
+--------------------------------------------------------------------------------
+    * script.lua
+        * string data_received(timestamp, ip, port, data)
 --------------------------------------------------------------------------------

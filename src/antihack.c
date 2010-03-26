@@ -16,10 +16,12 @@
 /*
     Todo:
         * support for udp
-        * fix chdir() in daemon.c (should work now, right? since daemonize is moved)
+        * chroot() on script to make it safe (specify run dir?)
+        * fix chdir() in daemon.c (necessary to fix?)
         * zombie process when killing child
+        * ability to get info about client?
 
-        * (c) -s to specify which script to use
+        * -s to specify which script to use
         * reload lua script on custom interrupt
 */
 
@@ -144,7 +146,7 @@ void start_server(int port, int daemon) {
         const char *ip = inet_ntoa(client_addr.sin_addr);
 
         const long timestamp = time(NULL);
-        DEBUG("incoming connection from %s:%ld @ time: %ld\n", ip, port, timestamp);
+        DEBUG("incoming connection from %s:%d @ time: %ld\n", ip, port, timestamp);
         connection_established(timestamp, ip, port);
 
         if (send_reply(time(NULL), ip, port)) {
@@ -162,8 +164,13 @@ void start_server(int port, int daemon) {
                 char temp[BUFFER_SIZE];
                 memset(temp, '\0', BUFFER_SIZE);
                 while(recv(clientfd, &temp, BUFFER_SIZE, 0) > 0) {
-                    DEBUG("data received: %s\n", temp);
-                    data_received(time(NULL), ip, port, (const char *)&temp);
+                    DEBUG("data received: \"%s\"\n", temp);
+                    const char *reply = data_received(time(NULL), ip, port, (const char *)&temp);
+                    DEBUG("reply data: \"%s\"\n", reply);
+                    if (reply) {
+                        DEBUG("sending reply: \"%s\"", reply);
+                        send(clientfd, reply, strlen(reply), 0);
+                    }
                     memset(temp, '\0', BUFFER_SIZE);
                 }
                 close(clientfd);
@@ -231,12 +238,15 @@ const char *reply_message(const long timestamp, const char *ip, const int port) 
     return reply_message;
 }
 
-void data_received(const long timestamp, const char *ip, const int port, const char *data) {
+const char *data_received(const long timestamp, const char *ip, const int port, const char *data) {
     DEBUG("calling lua function %s()\n", LUA_FUN_DATA_RECEIVED);
     lua_getglobal(L, LUA_FUN_DATA_RECEIVED);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
     lua_pushinteger(L, port);
     lua_pushstring(L, data);
-    lua_call(L, 4, 0);
+    lua_call(L, 4, 1);
+    const char *reply_message = lua_tostring(L, -1);
+    lua_pop(L, 1);
+    return reply_message;
 }

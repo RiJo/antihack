@@ -2,7 +2,7 @@
 #define _ANTIHACK_H_ 1
 
 #define PROGRAM_NAME                "antihack"
-#define PROGRAM_VERSION             "1.4.0"
+#define PROGRAM_VERSION             "1.5.0"
 #define PROGRAM_DATE                "2010-03-26"
 #define PROGRAM_AUTHORS             "Rikard Johansson, 2010"
 
@@ -39,6 +39,6 @@ void connection_closed(const long, const char *, const int, const long);
 int send_reply(const long, const char *, const int);
 int close_connection(const long, const char *, const int);
 const char *reply_message(const long, const char *, const int);
-void data_received(const long, const char *, const int, const char *);
+const char *data_received(const long, const char *, const int, const char *);
 
 #endif
