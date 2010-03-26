@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.5.0
+    current version:     1.6.0
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
