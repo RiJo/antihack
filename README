@@ -76,3 +76,17 @@
     * script.lua
         * string data_received(timestamp, ip, port, data)
 --------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.6.0, 2010-03-26
+--------------------------------------------------------------------------------
+    * Improved socket closing
+    * Arguments
+        -s SCRIPT   specify script to use
+    * script.lua
+        - bool send_reply(timestamp, ip, port)
+        + bool wait_for_more_data(timestamp, ip, port, last_incoming_data)
+        * bool reject_connection(timestamp, ip, port)
+    * Script for static simulation of webserver
+--------------------------------------------------------------------------------
