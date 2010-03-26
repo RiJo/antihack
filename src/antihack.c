@@ -16,10 +16,11 @@
 /*
     Todo:
         * support for udp
-        * reload lua script on custom interrupt
-        * fix chdir() in daemon.c
+        * fix chdir() in daemon.c (should work now, right? since daemonize is moved)
         * zombie process when killing child
-        * daemonize after socket is created
+
+        * (c) -s to specify which script to use
+        * reload lua script on custom interrupt
 */
 
 static lua_State *L;
@@ -58,7 +59,7 @@ int main(int argc, char **argv) {
     // initialize lua
     L = lua_open();
     luaL_openlibs(L);
-    (void)luaL_dofile(L, "script.lua");
+    (void)luaL_dofile(L, DEFAULT_LUA_SCRIPT_FILE);
 
     start_server(port, daemon);
     cleanup();
@@ -95,7 +96,7 @@ void print_usage() {
 void print_version() {
     printf("%s, version %s, released %s\n", PROGRAM_NAME, PROGRAM_VERSION, PROGRAM_DATE);
     printf("   compiled %s, %s\n\n", __DATE__, __TIME__);
-    printf("Rikard Johansson, 2010\n");
+    printf("%s\n", PROGRAM_AUTHORS);
 }
 
 void cleanup() {
@@ -140,31 +141,33 @@ void start_server(int port, int daemon) {
 
         int clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
 
-        const long timestamp = time(NULL);
         const char *ip = inet_ntoa(client_addr.sin_addr);
 
-        DEBUG("incoming connection from %s\n", ip);
-        connection_established(timestamp, ip);
+        const long timestamp = time(NULL);
+        DEBUG("incoming connection from %s:%ld @ time: %ld\n", ip, port, timestamp);
+        connection_established(timestamp, ip, port);
 
-        if (send_reply()) {
-            const char *reply = reply_message(timestamp, ip);
+        if (send_reply(time(NULL), ip, port)) {
+            const char *reply = reply_message(time(NULL), ip, port);
             send(clientfd, reply, strlen(reply), 0);
         }
 
-        if (close_connection()) {
+        if (close_connection(time(NULL), ip, port)) {
             close(clientfd);
-            connection_closed(timestamp, ip);
+            connection_closed(timestamp, ip, port, (time(NULL) - timestamp));
             DEBUG("connection terminated\n");
         }
         else {
             if (fork() == 0) {
                 char temp[BUFFER_SIZE];
+                memset(temp, '\0', BUFFER_SIZE);
                 while(recv(clientfd, &temp, BUFFER_SIZE, 0) > 0) {
                     DEBUG("data received: %s\n", temp);
-                    data_received(timestamp, ip, (const char *)&temp);
+                    data_received(time(NULL), ip, port, (const char *)&temp);
+                    memset(temp, '\0', BUFFER_SIZE);
                 }
                 close(clientfd);
-                connection_closed(timestamp, ip);
+                connection_closed(timestamp, ip, port, (time(NULL) - timestamp));
                 DEBUG("client closed connection\n");
                 exit(EXIT_SUCCESS);
             }
@@ -173,56 +176,67 @@ void start_server(int port, int daemon) {
     }
 }
 
-void connection_established(const long timestamp, const char *ip) {
+void connection_established(const long timestamp, const char *ip, const int port) {
     DEBUG("calling lua function %s()\n", LUA_FUN_ESTABLISHED);
     lua_getglobal(L, LUA_FUN_ESTABLISHED);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
-    lua_call(L, 2, 0);
+    lua_pushinteger(L, port);
+    lua_call(L, 3, 0);
 }
 
-void connection_closed(const long timestamp, const char *ip) {
+void connection_closed(const long timestamp, const char *ip, const int port, const long duration) {
     DEBUG("calling lua function %s()\n", LUA_FUN_CLOSED);
     lua_getglobal(L, LUA_FUN_CLOSED);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
-    lua_call(L, 2, 0);
+    lua_pushinteger(L, port);
+    lua_pushnumber(L, duration);
+    lua_call(L, 4, 0);
 }
 
-int send_reply() {
+int send_reply(const long timestamp, const char *ip, const int port) {
     DEBUG("calling lua function %s()\n", LUA_FUN_SEND_REPLY);
     lua_getglobal(L, LUA_FUN_SEND_REPLY);
-    lua_call(L, 0, 1);
+    lua_pushnumber(L, timestamp);
+    lua_pushstring(L, ip);
+    lua_pushinteger(L, port);
+    lua_call(L, 3, 1);
     int send_reply = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return send_reply;
 }
 
-int close_connection() {
+int close_connection(const long timestamp, const char *ip, const int port) {
     DEBUG("calling lua function %s()\n", LUA_FUN_CLOSE_CONNECTION);
     lua_getglobal(L, LUA_FUN_CLOSE_CONNECTION);
-    lua_call(L, 0, 1);
+    lua_pushnumber(L, timestamp);
+    lua_pushstring(L, ip);
+    lua_pushinteger(L, port);
+    lua_call(L, 3, 1);
     int close_connection = lua_toboolean(L, -1);
     lua_pop(L, 1);
     return close_connection;
 }
 
-const char *reply_message(const long timestamp, const char *ip) {
+const char *reply_message(const long timestamp, const char *ip, const int port) {
     DEBUG("calling lua function %s()\n", LUA_FUN_REPLY_MESSAGE);
     lua_getglobal(L, LUA_FUN_REPLY_MESSAGE);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
-    lua_call(L, 2, 1);
+    lua_pushinteger(L, port);
+    lua_call(L, 3, 1);
     const char *reply_message = lua_tostring(L, -1);
     lua_pop(L, 1);
     return reply_message;
 }
 
-void data_received(const long timestamp, const char *ip, const char *data) {
+void data_received(const long timestamp, const char *ip, const int port, const char *data) {
     DEBUG("calling lua function %s()\n", LUA_FUN_DATA_RECEIVED);
     lua_getglobal(L, LUA_FUN_DATA_RECEIVED);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
+    lua_pushinteger(L, port);
     lua_pushstring(L, data);
-    lua_call(L, 3, 0);
+    lua_call(L, 4, 0);
 }

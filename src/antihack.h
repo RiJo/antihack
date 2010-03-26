@@ -2,13 +2,16 @@
 #define _ANTIHACK_H_ 1
 
 #define PROGRAM_NAME                "antihack"
-#define PROGRAM_VERSION             "1.3.0"
-#define PROGRAM_DATE                "2010-03-25"
+#define PROGRAM_VERSION             "1.4.0"
+#define PROGRAM_DATE                "2010-03-26"
+#define PROGRAM_AUTHORS             "Rikard Johansson, 2010"
 
 #define PID_FILE                    "/var/run/" PROGRAM_NAME ".pid"
 
-#define DEFAULT_PORT 22
-#define BUFFER_SIZE 1024
+#define DEFAULT_PORT                22
+#define DEFAULT_LUA_SCRIPT_FILE     "script.lua"
+
+#define BUFFER_SIZE                 1024
 
 #define LUA_FUN_ESTABLISHED         "connection_established"
 #define LUA_FUN_CLOSED              "connection_closed"
@@ -31,11 +34,11 @@ void print_version();
 void cleanup();
 
 // lua wrappers
-void connection_established(const long, const char *);
-void connection_closed(const long, const char *);
-int send_reply();
-int close_connection();
-const char *reply_message(const long, const char *);
-void data_received(const long, const char *, const char *);
+void connection_established(const long, const char *, const int);
+void connection_closed(const long, const char *, const int, const long);
+int send_reply(const long, const char *, const int);
+int close_connection(const long, const char *, const int);
+const char *reply_message(const long, const char *, const int);
+void data_received(const long, const char *, const int, const char *);
 
 #endif
