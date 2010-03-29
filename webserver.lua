@@ -6,15 +6,12 @@
 
 -- called when an incoming connection is established
 function connection_established(timestamp, ip, port)
-    -- not in use, connection_closed() used instead to get duration
+    -- unused
 end
 
 -- called when an existing connection is closed
 function connection_closed(timestamp, ip, port, duration)
-    ---- log connection ----
-    local file = io.open("connections.log", "a")
-    file:write(timestamp .. "\t" .. ip .. ":" .. port .. "\t" .. duration .. "s\n")
-    file:close() 
+    -- unused
 end
 
 -- if the connection should be closed (rejected) or forked
@@ -36,10 +33,20 @@ end
 -- executed everytime data is received and sends back the return value to client
 -- nil == no reply
 function data_received(timestamp, ip, port, data)
-    ---- log data ----
-    local file = io.open(ip .. ":" .. port .. ".log", "a")
-    file:write(data)
-    file:close()
-    ---- send reply ----
-    return "<hml><body>foo bar</body></html>"
+    page, matches = string.gsub(data, ".*GET /(.*) HTTP.*", "%1")
+    if matches == 1 then
+        if (string.len(page) == 0) then
+            page = "index.html" -- default page
+        end
+        local file = io.open(page, "r")
+        if file then
+            code = file:read()
+            file:close()
+            return code
+        else
+            return "404" -- page not found
+        end
+    else
+        return "400" -- bad request
+    end
 end
