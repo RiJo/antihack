@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- antihack-1.6.0
+-- antihack-1.7.0
 --------------------------------------------------------------------------------
 -- Note: all pipes (stderr, stdin and stdout) are cut when program is daemonized
 --------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ end
 
 -- message which is sent back to client after the connection is established,
 -- nil == no reply
-function reply_message(timestamp, ip, port)
+function welcome_message(timestamp, ip, port)
     return nil
 end
 

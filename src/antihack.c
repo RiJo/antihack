@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>         /* close() */
+#include <sys/wait.h>       /* wait() waitpid() */
 #include <time.h>
 #include <string.h>
 #include <getopt.h>
@@ -18,11 +19,9 @@
         * support for udp
         * chroot() on script to make it safe (specify run dir?)
         * fix chdir() in daemon.c (necessary to fix?)
-        * zombie process when killing child
         * ability to get info about client?
-        * memoryleaks
-
-        * -s to specify which script to use
+        * fix all memoryleaks
+        * close all client sockets when killing signals appear
         * reload lua script on custom interrupt
 */
 
@@ -33,6 +32,7 @@ int main(int argc, char **argv) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGHUP, signal_handler);
+    signal(SIGCHLD, signal_handler);
 
     int daemon = 0;
     int port = DEFAULT_PORT;
@@ -88,7 +88,10 @@ void signal_handler(int signal) {
         case SIGHUP:
             fprintf(stderr, "\nterminating %s...\n", PROGRAM_NAME);
             cleanup();
-            exit(EXIT_SUCCESS);
+            exit(signal);
+        case SIGCHLD:
+            DEBUG("waiting for terminated childs\n");
+            wait(NULL); // kill zombie processes
         break;
     }
 }
@@ -154,8 +157,9 @@ void start_server(int port, int daemon) {
     }
 
     // Should be safe to cut pipes now...
-    if (daemon) {
-        daemonize(PID_FILE);
+    if (daemon && !daemonize(PID_FILE)) {
+        printf("Error: could not daemonize\n");
+        exit(EXIT_FAILURE);
     }
 
     while (1) {
@@ -163,22 +167,19 @@ void start_server(int port, int daemon) {
         socklen_t addrlen = sizeof(client_addr);
 
         int clientfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
-
         const char *ip = inet_ntoa(client_addr.sin_addr);
-
         const long timestamp = time(NULL);
-        DEBUG("incoming connection from %s:%d @ time: %ld\n", ip, port, timestamp);
         connection_established(timestamp, ip, port);
+        DEBUG("incoming connection from %s:%d @ time: %ld\n", ip, port, timestamp);
 
-        const char *reply = reply_message(time(NULL), ip, port);
-        if (reply) {
-            send(clientfd, reply, strlen(reply), 0);
+        const char *message = welcome_message(time(NULL), ip, port);
+        if (message) {
+            send(clientfd, message, strlen(message), 0);
         }
 
         if (reject_connection(time(NULL), ip, port)) {
             close_socket(clientfd);
             connection_closed(time(NULL), ip, port, (time(NULL) - timestamp));
-            DEBUG("connection terminated\n");
         }
         else {
             if (fork() == 0) {
@@ -237,9 +238,9 @@ int reject_connection(const long timestamp, const char *ip, const int port) {
     return reject;
 }
 
-const char *reply_message(const long timestamp, const char *ip, const int port) {
-    DEBUG("calling lua function %s()\n", LUA_FUN_REPLY_MESSAGE);
-    lua_getglobal(L, LUA_FUN_REPLY_MESSAGE);
+const char *welcome_message(const long timestamp, const char *ip, const int port) {
+    DEBUG("calling lua function %s()\n", LUA_FUN_WELCOME_MESSAGE);
+    lua_getglobal(L, LUA_FUN_WELCOME_MESSAGE);
     lua_pushnumber(L, timestamp);
     lua_pushstring(L, ip);
     lua_pushinteger(L, port);

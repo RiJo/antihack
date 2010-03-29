@@ -1,12 +1,15 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.6.0
+    current version:     1.7.0
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
     connection is established, corresponding functions is executed in the lua
     script file making it easy to respond to unwanted connections.
+
+--------------------------------------------------------------------------------
+
 
 --------------------------------------------------------------------------------
  version 1.0.0, 2010-03-25
@@ -89,4 +92,14 @@
         + bool wait_for_more_data(timestamp, ip, port, last_incoming_data)
         * bool reject_connection(timestamp, ip, port)
     * Script for static simulation of webserver
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.7.0, 2010-03-29
+--------------------------------------------------------------------------------
+    * script.lua
+        * string welcome_message(timestamp, ip, port)
+    * Bugfix: added interrupt handler for SIGCHLD to avoid zombie processes
+    * Bugfix: kill program if daemonize fails
 --------------------------------------------------------------------------------

@@ -19,8 +19,8 @@
 
 #define LUA_FUN_ESTABLISHED         "connection_established"
 #define LUA_FUN_CLOSED              "connection_closed"
-#define LUA_FUN_REJECT_CONNECTION    "reject_connection"
-#define LUA_FUN_REPLY_MESSAGE       "reply_message"
+#define LUA_FUN_REJECT_CONNECTION   "reject_connection"
+#define LUA_FUN_WELCOME_MESSAGE     "welcome_message"
 #define LUA_FUN_WAIT_FOR_MORE_DATA  "wait_for_more_data"
 #define LUA_FUN_DATA_RECEIVED       "data_received"
 
@@ -42,7 +42,7 @@ void cleanup();
 void connection_established(const long, const char *, const int);
 void connection_closed(const long, const char *, const int, const long);
 int reject_connection(const long, const char *, const int);
-const char *reply_message(const long, const char *, const int);
+const char *welcome_message(const long, const char *, const int);
 int wait_for_more_data(const long, const char *, const int, const char *);
 const char *data_received(const long, const char *, const int, const char *);
 
