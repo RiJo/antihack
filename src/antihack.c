@@ -20,23 +20,22 @@
         * chroot() on script to make it safe (specify run dir?)
         * fix chdir() in daemon.c (necessary to fix?)
         * ability to get info about client?
-        * fix all memoryleaks
         * close all client sockets when killing signals appear
-        * reload lua script on custom interrupt
 */
 
 static lua_State *L;
 static int sockfd;
+static char *script = NULL;
 
 int main(int argc, char **argv) {
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
     signal(SIGHUP, signal_handler);
     signal(SIGCHLD, signal_handler);
+    signal(SIGUSR1, signal_handler);
 
     int daemon = 0;
     int port = DEFAULT_PORT;
-    char *script = NULL;
 
     int arg;
     while((arg = getopt(argc, argv, "dhp:s:v")) != EOF) {
@@ -70,10 +69,7 @@ int main(int argc, char **argv) {
 
     L = lua_open();
     luaL_openlibs(L);
-    if (script)
-        (void)luaL_dofile(L, script);
-    else
-        (void)luaL_dofile(L, DEFAULT_LUA_SCRIPT_FILE);
+    load_lua_script(script);
 
     start_server(port, daemon);
     cleanup();
@@ -92,6 +88,9 @@ void signal_handler(int signal) {
         case SIGCHLD:
             DEBUG("waiting for terminated childs\n");
             wait(NULL); // kill zombie processes
+        break;
+        case SIGUSR1:
+            load_lua_script(script);
         break;
     }
 }
@@ -131,6 +130,17 @@ void close_socket(int sockfd) {
     DEBUG("connection shutdown\n");
     close(sockfd);
     DEBUG("connection closed\n");
+}
+
+void load_lua_script(const char *script) {
+    if (script) {
+        (void)luaL_dofile(L, script);
+        DEBUG("lua script file \"%s\" loaded\n", script);
+    }
+    else {
+        (void)luaL_dofile(L, DEFAULT_LUA_SCRIPT_FILE);
+        DEBUG("lua script file \"%s\" loaded\n", DEFAULT_LUA_SCRIPT_FILE);
+    }
 }
 
 void start_server(int port, int daemon) {

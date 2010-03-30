@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 
     antihack
-    current version:     1.7.0
+    current version:     1.8.0
     by:                  Rikard Johansson
 
     This application is a simple server written in c. Whenever an incoming
@@ -102,4 +102,11 @@
         * string welcome_message(timestamp, ip, port)
     * Bugfix: added interrupt handler for SIGCHLD to avoid zombie processes
     * Bugfix: kill program if daemonize fails
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+ version 1.8.0, xxxx-xx-xx
+--------------------------------------------------------------------------------
+    * Added interrupt handling for SIGUSR1 which reloads the lua script file
 --------------------------------------------------------------------------------
