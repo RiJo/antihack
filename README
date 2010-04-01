@@ -106,7 +106,8 @@
 
 
 --------------------------------------------------------------------------------
- version 1.8.0, xxxx-xx-xx
+ version 1.8.0, 2010-04-01
 --------------------------------------------------------------------------------
     * Added interrupt handling for SIGUSR1 which reloads the lua script file
+    * Bugfix: reassign socket fd when forking to close correct on interrupt
 --------------------------------------------------------------------------------

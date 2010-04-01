@@ -20,12 +20,13 @@
         * chroot() on script to make it safe (specify run dir?)
         * fix chdir() in daemon.c (necessary to fix?)
         * ability to get info about client?
-        * close all client sockets when killing signals appear
 */
 
 static lua_State *L;
 static int sockfd;
 static char *script = NULL;
+static int is_daemon = 0;
+static int port = DEFAULT_PORT;
 
 int main(int argc, char **argv) {
     signal(SIGINT, signal_handler);
@@ -34,14 +35,42 @@ int main(int argc, char **argv) {
     signal(SIGCHLD, signal_handler);
     signal(SIGUSR1, signal_handler);
 
-    int daemon = 0;
-    int port = DEFAULT_PORT;
+    handle_arguments(argc, argv);
 
+    L = lua_open();
+    luaL_openlibs(L);
+    load_lua_script(script);
+
+    start_server(port);
+    cleanup();
+    return EXIT_SUCCESS;
+}
+
+void signal_handler(int signal) {
+    DEBUG("received interrupt %d\n", signal);
+    switch (signal) {
+        case SIGINT:
+        case SIGTERM:
+        case SIGHUP:
+            fprintf(stderr, "\nterminating %s...\n", PROGRAM_NAME);
+            cleanup();
+            exit(signal);
+        case SIGCHLD:
+            DEBUG("waiting for terminated childs\n");
+            wait(NULL); // kill zombie processes
+        break;
+        case SIGUSR1:
+            load_lua_script(script);
+        break;
+    }
+}
+
+void handle_arguments(int argc, char **argv) {
     int arg;
     while((arg = getopt(argc, argv, "dhp:s:v")) != EOF) {
         switch (arg) {
             case 'd':
-                daemon = 1;
+                is_daemon = 1;
             break;
             case 'h':
                 print_help();
@@ -65,33 +94,6 @@ int main(int argc, char **argv) {
                 exit(EXIT_FAILURE);
             break;
         }
-    }
-
-    L = lua_open();
-    luaL_openlibs(L);
-    load_lua_script(script);
-
-    start_server(port, daemon);
-    cleanup();
-    return EXIT_SUCCESS;
-}
-
-void signal_handler(int signal) {
-    DEBUG("received interrupt %d\n", signal);
-    switch (signal) {
-        case SIGINT:
-        case SIGTERM:
-        case SIGHUP:
-            fprintf(stderr, "\nterminating %s...\n", PROGRAM_NAME);
-            cleanup();
-            exit(signal);
-        case SIGCHLD:
-            DEBUG("waiting for terminated childs\n");
-            wait(NULL); // kill zombie processes
-        break;
-        case SIGUSR1:
-            load_lua_script(script);
-        break;
     }
 }
 
@@ -126,6 +128,7 @@ void cleanup() {
 }
 
 void close_socket(int sockfd) {
+    DEBUG("closing socket: %d\n", sockfd);
     shutdown(sockfd, SOCKET_SHUTDOWN_ALL);
     DEBUG("connection shutdown\n");
     close(sockfd);
@@ -143,7 +146,7 @@ void load_lua_script(const char *script) {
     }
 }
 
-void start_server(int port, int daemon) {
+void start_server(int port) {
     struct sockaddr_in self;
 
     if ( (sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0 ) {
@@ -167,7 +170,7 @@ void start_server(int port, int daemon) {
     }
 
     // Should be safe to cut pipes now...
-    if (daemon && !daemonize(PID_FILE)) {
+    if (is_daemon && !daemonize(PID_FILE)) {
         printf("Error: could not daemonize\n");
         exit(EXIT_FAILURE);
     }
@@ -193,6 +196,7 @@ void start_server(int port, int daemon) {
         }
         else {
             if (fork() == 0) {
+                sockfd = clientfd; // to handle this connection in case of int
                 char temp[BUFFER_SIZE];
                 do {
                     memset(temp, '\0', BUFFER_SIZE);

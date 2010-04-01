@@ -3,7 +3,7 @@
 
 #define PROGRAM_NAME                "antihack"
 #define PROGRAM_VERSION             "1.8.0"
-#define PROGRAM_DATE                "2010-03-30"
+#define PROGRAM_DATE                "2010-04-01"
 #define PROGRAM_AUTHORS             "Rikard Johansson, 2010"
 
 #define PID_FILE                    "/var/run/" PROGRAM_NAME ".pid"
@@ -31,9 +31,10 @@
 #endif
 
 void signal_handler(int);
+void handle_arguments(int, char **);
 void close_socket(int);
 void load_lua_script(const char *);
-void start_server(int, int);
+void start_server(int);
 void print_help();
 void print_usage();
 void print_version();
